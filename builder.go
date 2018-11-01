@@ -164,7 +164,7 @@ var tplMain = template.Must(template.New("main").Parse(`
 package main
 
 import (
-	"github.com/gucumber/gucumber"
+	"github.com/bobisme/gucumber"
 	{{range $n, $i := .Imports}}_i{{$n}} "{{$i}}"
 	{{end}}
 )

@@ -1,7 +1,7 @@
 package basic
 
 import (
-	. "github.com/gucumber/gucumber"
+	. "github.com/bobisme/gucumber"
 	"github.com/stretchr/testify/assert"
 )
 

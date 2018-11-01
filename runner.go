@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/gucumber/gucumber/gherkin"
+	"github.com/bobisme/gucumber/gherkin"
 	"github.com/shiena/ansicolor"
 )
 
@@ -107,7 +107,7 @@ func (c *Runner) MissingMatcherStubs() string {
 	var buf bytes.Buffer
 	matches := map[string]bool{}
 
-	buf.WriteString(`import . "github.com/gucumber/gucumber"` + "\n\n")
+	buf.WriteString(`import . "github.com/bobisme/gucumber"` + "\n\n")
 	buf.WriteString("func init() {\n")
 
 	for _, m := range c.Unmatched {
@@ -388,14 +388,23 @@ type Tester interface {
 	Skip(args ...interface{})
 }
 
+type TestError struct {
+	message string
+	stack   []byte
+}
+
+// TestingT implements the testing.TB public interface to ensure compatability
+// with other assertion libraries.
 type TestingT struct {
 	skipped bool
 	errors  []TestError
 }
 
-type TestError struct {
-	message string
-	stack   []byte
+func (t *TestingT) Error(args ...interface{}) {
+	if len(args) == 0 {
+		return
+	}
+	t.errors = append(t.errors, TestError{message: fmt.Sprint(args...)})
 }
 
 func (t *TestingT) Errorf(format string, args ...interface{}) {
@@ -414,18 +423,50 @@ func (t *TestingT) Errorf(format string, args ...interface{}) {
 	t.errors = append(t.errors, TestError{message: str, stack: buf.Bytes()})
 }
 
-func (t *TestingT) Skip(args ...interface{}) {
-	t.skipped = true
+func (t *TestingT) Fail() {
 }
 
-func (t *TestingT) Skipped() bool {
-	return t.skipped
+func (t *TestingT) FailNow() {
 }
 
 func (t *TestingT) Failed() bool {
 	return len(t.errors) > 0
 }
 
-func (t *TestingT) Error(err error) {
-	t.errors = append(t.errors, TestError{message: err.Error()})
+func (t *TestingT) Fatal(args ...interface{}) {
+	t.Error(args...)
 }
+
+func (t *TestingT) Fatalf(format string, args ...interface{}) {
+	t.Error(fmt.Sprintf(format, args...))
+}
+
+func (t *TestingT) Log(args ...interface{}) {
+	fmt.Println(args...)
+}
+
+func (t *TestingT) Logf(format string, args ...interface{}) {
+	fmt.Printf(format, args...)
+}
+
+func (t *TestingT) Name() string {
+	return "gucumber"
+}
+
+func (t *TestingT) Skip(args ...interface{}) {
+	t.skipped = true
+}
+
+func (t *TestingT) SkipNow() {
+	t.Skip()
+}
+
+func (t *TestingT) Skipf(format string, args ...interface{}) {
+	t.Skip()
+}
+
+func (t *TestingT) Skipped() bool {
+	return t.skipped
+}
+
+func (t *TestingT) Helper() {}
